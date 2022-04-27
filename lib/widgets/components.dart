@@ -50,10 +50,10 @@ Widget defaultFormField({
         contentPadding: EdgeInsets.symmetric(
             vertical: SizeConfig.getH(vPadding), horizontal: SizeConfig.getW(10)),
         // border: InputBorder.none,
-        border: outlineInputBorder(boarderColor),
-        enabledBorder: outlineInputBorder(boarderColor),
-        focusedBorder: outlineInputBorder(boarderColor),
-        disabledBorder: outlineInputBorder(boarderColor),
+        // border: outlineInputBorder(boarderColor),
+        // enabledBorder: outlineInputBorder(boarderColor),
+        // focusedBorder: outlineInputBorder(boarderColor),
+        // disabledBorder: outlineInputBorder(boarderColor),
         prefixIcon: Icon(
           prefix,
           size: SizeConfig.getFontSize(20),
@@ -75,7 +75,7 @@ Widget defaultFormField({
     );
 
 OutlineInputBorder outlineInputBorder(boarderColor) {
-  return OutlineInputBorder(
+  return  OutlineInputBorder(
     borderRadius: BorderRadius.all(Radius.circular(SizeConfig.getR(4))),
     borderSide: BorderSide(color: boarderColor, width: 1.5),
   );

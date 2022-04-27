@@ -1,12 +1,18 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:csv/csv.dart';
+import 'package:injectable/injectable.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share/share.dart';
 import 'package:file_picker/file_picker.dart';
-import '../models/book_model.dart';
 
+import '../../local_storage.dart';
+import '../../models/book_model.dart';
+import '../csv.dart';
+
+@Injectable()
 class Storage {
   Future<String> get _localPath async {
     // 1
@@ -17,9 +23,13 @@ class Storage {
   }
 
   Future<File> get _localFile async {
-    // 2
     final path = await _localPath;
     return File('$path/books backup.json');
+  }
+
+  Future<File> get _localCSVFile async {
+    final path = await _localPath;
+    return File('$path/books data.csv');
   }
 
   Future<File> writeBooks(List<Book> books) async {
@@ -37,6 +47,21 @@ class Storage {
 
     String encodedPeople =
         jsonEncode(books.map((e) => e.toMap()).toList()); // 6
+    return file.writeAsString(encodedPeople); // 7
+  }
+
+  Future<File> writeToCSV(String text) async {
+    // 3
+    if (!await Permission.storage.request().isGranted) {
+      // 4
+      return Future.value(null);
+    }
+    final file = await _localCSVFile;
+    if (!await file.exists()) {
+      // 5
+      await file.create(recursive: true);
+    }
+    String encodedPeople = jsonEncode(text); // 6
     return file.writeAsString(encodedPeople); // 7
   }
 
@@ -65,6 +90,14 @@ class Storage {
     writeBooks(books);
     File file = await _localFile; // 1
     Share.shareFiles([file.path], text: 'books backup'); // 2
+  }
+
+  void shareCSV() async {
+    var csv = mapListToCsv(await DBHelper.getData(booksT),
+        converter: const ListToCsvConverter());
+    writeToCSV(csv!);
+    File file = await _localCSVFile; // 1
+    Share.shareFiles([file.path], text: 'books data'); // 2
   }
 
   Future<List<Book>> readFromFilePicker() async {

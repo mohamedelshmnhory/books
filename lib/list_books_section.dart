@@ -1,3 +1,5 @@
+import 'package:books/bloc/app_bloc/app_bloc.dart';
+import 'package:books/dependencies/dependency_init.dart';
 import 'package:books/styles/colors.dart';
 import 'package:books/styles/size_config.dart';
 import 'package:flutter/material.dart';
@@ -11,12 +13,12 @@ class ListBooksSection extends StatefulWidget {
   const ListBooksSection(
       {Key? key,
       required this.books,
-      required this.function,
+      required this.appBloc,
       required this.title})
       : super(key: key);
   final String title;
   final List<Book> books;
-  final Function function;
+  final AppBloc appBloc;
 
   @override
   State<ListBooksSection> createState() => _ListBooksSectionState();
@@ -49,13 +51,19 @@ class _ListBooksSectionState extends State<ListBooksSection> {
                 return GestureDetector(
                   onTap: () {
                     showDialog(
-                        context: context,
-                        builder: (_) {
-                          return Dialog(
-                            child: AddBookForm(
-                                book: book, function: widget.function),
-                          );
-                        }).then((value) => widget.function());
+                            context: context,
+                            builder: (_) {
+                              return Dialog(
+                                child: AddBookForm(
+                                  book: book,
+                                  function: () {
+                                    widget.appBloc.add(GetBooksFromDB());
+                                  },
+                                  appBloc: widget.appBloc,
+                                ),
+                              );
+                            })
+                        .then((value) => widget.appBloc.add(GetBooksFromDB()));
                   },
                   onLongPress: () {
                     showDialog(
@@ -68,7 +76,7 @@ class _ListBooksSectionState extends State<ListBooksSection> {
                                       DBHelper.delete(
                                               booksT, widget.books[index].id!)
                                           .then((value) {
-                                        widget.function();
+                                        widget.appBloc.add(GetBooksFromDB());
                                         Navigator.pop(context);
                                       });
                                     },
@@ -84,65 +92,61 @@ class _ListBooksSectionState extends State<ListBooksSection> {
                   child: Card(
                     child: Padding(
                       padding: EdgeInsets.all(SizeConfig.getW(10)),
-                      child: Stack(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Row(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.menu_book,
                                   size: SizeConfig.getFontSize(50)),
-                              sizedBoxW(10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
+                              if (book.rate != null)
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(
-                                      book.name ?? 'no name',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headline5!
-                                          .copyWith(color: dark),
-                                    ),
-                                    Text(
-                                      'by ' + (book.author ?? 'no name'),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headline3!
-                                          .copyWith(
-                                              color: dark.withOpacity(.5)),
-                                    ),
-                                    Text(
-                                      intl.DateFormat('y-M-d / ')
-                                          .add_jm()
-                                          .format(DateTime.parse(book.date!)),
-                                      textAlign: TextAlign.end,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headline3!
-                                          .copyWith(
-                                              color: dark.withOpacity(.5)),
-                                    ),
+                                    Text(book.rate!.toString()),
+                                    sizedBoxW(5),
+                                    const Icon(Icons.star,
+                                        color: yellow, size: 15),
                                   ],
-                                ),
-                              ),
+                                )
                             ],
                           ),
-                          if (book.rate != null)
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(book.rate!.toString()),
-                                  sizedBoxW(5),
-                                  const Icon(Icons.star,
-                                      color: yellow, size: 15),
-                                ],
-                              ),
+                          sizedBoxW(10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  book.name ?? 'no name',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headline5!
+                                      .copyWith(color: dark),
+                                ),
+                                Text(
+                                  'by ' + (book.author ?? 'no name'),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headline3!
+                                      .copyWith(color: dark.withOpacity(.5)),
+                                ),
+                                Text(
+                                  intl.DateFormat('y-M-d / ')
+                                      .add_jm()
+                                      .format(DateTime.parse(book.date!)),
+                                  textAlign: TextAlign.end,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headline3!
+                                      .copyWith(color: dark.withOpacity(.5)),
+                                ),
+                              ],
                             ),
+                          ),
                         ],
                       ),
                     ),

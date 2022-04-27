@@ -1,4 +1,3 @@
-import 'package:books/models/status_model.dart';
 
 class Book {
   int? id;

@@ -14,9 +14,9 @@ class DBHelper {
     }, version: 1);
   }
 
-  static Future<void> insert(String table, Book book) async {
+  static Future<int> insert(String table, Book book) async {
     final db = await DBHelper.database();
-    db.insert(table, book.toMap());
+    return db.insert(table, book.toMap());
   }
 
   static Future<List<Map<String, dynamic>>> getData(String table) async {
