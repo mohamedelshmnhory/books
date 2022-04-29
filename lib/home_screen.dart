@@ -2,7 +2,6 @@ import 'package:books/bloc/app_bloc/app_bloc.dart';
 import 'package:books/styles/colors.dart';
 import 'package:books/styles/size_config.dart';
 import 'package:books/widgets/backup_dialog.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -23,8 +22,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   AppBloc appBloc = getIt<AppBloc>();
   int selectedStatus = 0;
-  Icon customIcon = const Icon(Icons.search);
-  Widget customSearchBar = const Text(appName);
 
   @override
   void initState() {
@@ -36,14 +33,17 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: customIcon.icon == Icons.search ? gestureTitle : customSearchBar,
+        title: appBloc.customIcon.icon == Icons.search
+            ? gestureTitle
+            : appBloc.customSearchBar,
         actions: [
           IconButton(
               onPressed: () {
                 setState(() {
-                  if (customIcon.icon == Icons.search) {
-                    customIcon = const Icon(Icons.cancel);
-                    customSearchBar = ListTile(
+                  if (appBloc.customIcon.icon == Icons.search) {
+                    appBloc.customIcon = const Icon(Icons.cancel);
+                    appBloc.filter = 'All';
+                    appBloc.customSearchBar = ListTile(
                       leading: const Icon(Icons.search, color: white),
                       title: TextField(
                         onChanged: (value) {
@@ -67,12 +67,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     );
                   } else {
-                    customIcon = const Icon(Icons.search);
-                    customSearchBar = const Text(appName);
+                    appBloc.searchBooks.clear();
+                    appBloc.customIcon = const Icon(Icons.search);
+                    appBloc.customSearchBar = const Text(appName);
                   }
                 });
               },
-              icon: customIcon)
+              icon: appBloc.customIcon)
         ],
       ),
       body: GestureDetector(
@@ -91,72 +92,153 @@ class _MyHomePageState extends State<MyHomePage> {
             });
           }
         },
-        child: Column(
-          children: [
-            Visibility(
-              visible: customIcon.icon == Icons.search,
-              child: Column(
-                children: [
-                  sizedBoxH(15),
-                  Wrap(
+        child: BlocConsumer<AppBloc, AppState>(
+          bloc: appBloc,
+          listener: (context, state) {},
+          builder: (context, state) {
+            return Column(
+              children: [
+                Visibility(
+                  visible: appBloc.searchBooks.isEmpty &&
+                      appBloc.customIcon.icon == Icons.search,
+                  child: Column(
                     children: [
-                      ...List.generate(
-                        statusList.length,
-                        (index) => GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedStatus = index;
-                            });
-                          },
-                          child: Container(
-                            margin: EdgeInsetsDirectional.only(
-                                end: SizeConfig.getW(5)),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: SizeConfig.getW(20),
-                                vertical: SizeConfig.getH(5)),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: mainColor),
-                              borderRadius: BorderRadius.circular(25),
-                              color:
-                                  selectedStatus == index ? mainColor : white,
+                      sizedBoxH(15),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ...List.generate(
+                            statusList.length,
+                            (index) => GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedStatus = index;
+                                });
+                              },
+                              child: Container(
+                                margin: EdgeInsetsDirectional.only(
+                                    end: SizeConfig.getW(5)),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: SizeConfig.getW(20),
+                                    vertical: SizeConfig.getH(5)),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: mainColor),
+                                  borderRadius: BorderRadius.circular(15),
+                                  color: selectedStatus == index
+                                      ? mainColor
+                                      : white,
+                                ),
+                                child: Text(
+                                  statusList[index].title ?? '',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headline4!
+                                      .copyWith(
+                                        color: selectedStatus == index
+                                            ? white
+                                            : mainColor,
+                                      ),
+                                ),
+                              ),
                             ),
-                            child: Text(
-                              statusList[index].title ?? '',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline4!
-                                  .copyWith(
-                                    color: selectedStatus == index
-                                        ? white
-                                        : mainColor,
-                                  ),
-                            ),
-                          ),
-                        ),
-                      )
+                          )
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            sizedBoxH(10),
-            Expanded(
-              child: BlocConsumer<AppBloc, AppState>(
-                bloc: appBloc,
-                listener: (context, state) {},
-                builder: (context, state) {
-                  return ListBooksSection(
-                      books: customIcon.icon != Icons.search
+                ),
+                sizedBoxH(10),
+                Expanded(
+                  child: ListBooksSection(
+                      books: appBloc.searchBooks.isNotEmpty ||
+                              appBloc.customIcon.icon != Icons.search
                           ? appBloc.searchBooks
                           : appBloc.books
                               .where((book) => book.status == selectedStatus)
                               .toList(),
                       appBloc: appBloc,
-                      title: 'Reading');
-                },
-              ),
+                      title: 'Reading'),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+      drawer: Drawer(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: BlocConsumer<AppBloc, AppState>(
+              bloc: appBloc,
+              listener: (context, state) {},
+              builder: (context, state) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    sizedBoxH(20),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          appBloc.cleatSearch();
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: const Text('All'),
+                      style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all(
+                              appBloc.filter == 'All'
+                                  ? mainColor
+                                  : mainColor.withOpacity(.3))),
+                    ),
+                    ExpansionTile(
+                      title: const Text('Authors'),
+                      children: [
+                        ...List.generate(
+                            appBloc.authors.length,
+                            (index) => ElevatedButton(
+                                  onPressed: () {
+                                    appBloc.add(FilterByAuthor(
+                                        appBloc.authors[index]));
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text(appBloc.authors[index]),
+                                  style: ButtonStyle(
+                                      backgroundColor:
+                                          MaterialStateProperty.all(
+                                              appBloc.filter ==
+                                                      appBloc.authors[index]
+                                                  ? mainColor
+                                                  : mainColor.withOpacity(.5))),
+                                ))
+                      ],
+                    ),
+                    ExpansionTile(
+                      title: const Text('Classifications'),
+                      children: [
+                        ...List.generate(
+                            appBloc.classifications.length,
+                            (index) => ElevatedButton(
+                                  onPressed: () {
+                                    appBloc.add(FilterByClassification(
+                                        appBloc.classifications[index]));
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text(appBloc.classifications[index]),
+                                  style: ButtonStyle(
+                                      backgroundColor:
+                                          MaterialStateProperty.all(appBloc
+                                                      .filter ==
+                                                  appBloc.classifications[index]
+                                              ? mainColor
+                                              : mainColor.withOpacity(.5))),
+                                ))
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
-          ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(

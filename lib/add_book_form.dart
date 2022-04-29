@@ -2,6 +2,7 @@ import 'package:books/bloc/app_bloc/app_bloc.dart';
 import 'package:books/dependencies/dependency_init.dart';
 import 'package:books/styles/size_config.dart';
 import 'package:books/widgets/app_button.dart';
+import 'package:books/widgets/dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
@@ -71,7 +72,7 @@ class _AddBookFormState extends State<AddBookForm> {
               sizedBoxH(20),
               defaultFormField(
                 controller: nameController,
-                type: TextInputType.name,
+                type: TextInputType.text,
                 validate: (String? value) {
                   if (value!.isEmpty) {
                     return emptyError;
@@ -95,10 +96,9 @@ class _AddBookFormState extends State<AddBookForm> {
                 label: 'Author',
                 prefix: null,
               ),
-              sizedBoxH(10),
               SizedBox(
                 height:
-                    widget.appBloc.authors.isEmpty ? 0 : SizeConfig.getH(30),
+                    widget.appBloc.authors.isEmpty ? 0 : SizeConfig.getH(50),
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: widget.appBloc.authors.length,
@@ -110,6 +110,8 @@ class _AddBookFormState extends State<AddBookForm> {
                         authorController.text = author;
                       },
                       child: Container(
+                        margin:
+                            EdgeInsets.symmetric(vertical: SizeConfig.getH(10)),
                         padding: EdgeInsets.symmetric(
                             horizontal: SizeConfig.getW(20),
                             vertical: SizeConfig.getH(5)),
@@ -129,10 +131,10 @@ class _AddBookFormState extends State<AddBookForm> {
                       sizedBoxW(5),
                 ),
               ),
-              sizedBoxH(10),
+
               defaultFormField(
                 controller: classificationController,
-                type: TextInputType.name,
+                type: TextInputType.text,
                 validate: (String? value) {
                   // if (value!.isEmpty) {
                   //   return emptyError;
@@ -156,7 +158,10 @@ class _AddBookFormState extends State<AddBookForm> {
                         widget.appBloc.classifications[index];
                     return GestureDetector(
                       onTap: () {
-                        classificationController.text = classification;
+                        if (!classificationController.text
+                            .contains(classification)) {
+                          classificationController.text += ' ' + classification.trim();
+                        }
                       },
                       child: Container(
                         padding: EdgeInsets.symmetric(
@@ -240,11 +245,20 @@ class _AddBookFormState extends State<AddBookForm> {
               AppButton(
                 function: () {
                   if (formKey.currentState!.validate()) {
+                    if (widget.appBloc.books.any((book) {
+                      if (widget.book != null && book.id == widget.book?.id) {
+                        return false;
+                      }
+                      return book.name?.trim().toLowerCase() ==
+                          nameController.text.trim().toLowerCase();
+                    })) {
+                      return alert(context);
+                    }
                     if (widget.book == null) {
                       Book bk = Book(
-                        name: nameController.text,
-                        author: authorController.text,
-                        classification: classificationController.text,
+                        name: nameController.text.trim(),
+                        author: authorController.text.trim(),
+                        classification: classificationController.text.trim(),
                         status: statusId,
                         rate: rate,
                         numberOfReads: 0,
@@ -257,10 +271,10 @@ class _AddBookFormState extends State<AddBookForm> {
                         // showRateDialog(context, bk);
                       });
                     } else {
-                      widget.book?.name = nameController.text;
-                      widget.book?.author = authorController.text;
+                      widget.book?.name = nameController.text.trim();
+                      widget.book?.author = authorController.text.trim();
                       widget.book?.classification =
-                          classificationController.text;
+                          classificationController.text.trim();
                       widget.book?.rate = rate;
                       widget.book?.status = statusId;
                       widget.book?.date = DateTime.now().toString();

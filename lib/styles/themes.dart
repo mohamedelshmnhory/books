@@ -46,7 +46,7 @@ ThemeData lightTheme = ThemeData(
     ),
     headline4: TextStyle(
       color: mainColor,
-      fontSize: SizeConfig.getFontSize(20),
+      fontSize: SizeConfig.getFontSize(16),
       fontFamily: 'NeoSansArabic',
     ),
     headline5: TextStyle(

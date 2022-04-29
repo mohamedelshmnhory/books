@@ -19,6 +19,11 @@ class DBHelper {
     return db.insert(table, book.toMap());
   }
 
+  static Future deleteDatabase() async {
+    final dbPath = await sql.getDatabasesPath();
+    return sql.deleteDatabase(path.join(dbPath, 'books.db'));
+  }
+
   static Future<List<Map<String, dynamic>>> getData(String table) async {
     final db = await DBHelper.database();
     return db.query(table);

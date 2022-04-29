@@ -41,7 +41,9 @@ class BackupDialog extends StatelessWidget {
           child: const Text('Share csv'),
         ),
         TextButton(
-          onPressed: () => appBloc.readBooksFromFilePicker(),
+          onPressed: () => appBloc.readBooksFromFilePicker().then((value) {
+            doneAlert(context);
+          }),
           child: const Text('File Picker'),
         ),
       ],

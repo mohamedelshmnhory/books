@@ -21,12 +21,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ScreenUtilInit(
         designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
         builder: (context) {
           return BlocProvider(
             create: (context) => getIt<AppBloc>(),
             child: MaterialApp(
               title: appName,
               theme: lightTheme,
+              useInheritedMediaQuery: true,
               home: const MyHomePage(),
               debugShowCheckedModeBanner: false,
             ),

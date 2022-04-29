@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../local_storage.dart';
+import '../../main.dart';
 import '../../models/book_model.dart';
 import '../../utils/backup/storage.dart';
 
@@ -17,51 +19,101 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<AppEvent>((event, emit) async {
       if (event is GetBooksFromDB) {
         await _getBooksFromDB(emit);
+      } else if (event is FilterByClassification) {
+        _filterByClassification(emit, event);
+      } else if (event is FilterByAuthor) {
+        _filterByAuthor(emit, event);
       }
     });
   }
 
   final Storage storage;
-  List<Book> books = [];
+  List<Book> _books = [];
   List<Book> searchBooks = [];
   List<String> authors = [];
   List<String> classifications = [];
+  String filter = 'All';
+  Icon customIcon = const Icon(Icons.search);
+  Widget customSearchBar = const Text(appName);
+
+  List<Book> get books => _books;
+
+  void _filterByAuthor(Emitter<AppState> emit, FilterByAuthor event) {
+    emit(GetBooksLoading());
+    filter = event.author;
+    searchBooks = _books.where((book) {
+      if (book.author == null) {
+        return false;
+      }
+      return book.author!.contains(event.author);
+    }).toList();
+    emit(GetBooksSuccess());
+  }
+
+  void _filterByClassification(
+      Emitter<AppState> emit, FilterByClassification event) {
+    emit(GetBooksLoading());
+    filter = event.classification;
+    searchBooks = _books.where((book) {
+      if (book.classification == null) {
+        return false;
+      }
+      return book.classification!.contains(event.classification);
+    }).toList();
+    emit(GetBooksSuccess());
+  }
+
+  void cleatSearch() {
+    searchBooks.clear();
+    filter = 'All';
+    customIcon = const Icon(Icons.search);
+    customSearchBar = const Text(appName);
+  }
 
   Future<void> _getBooksFromDB(Emitter<AppState> emit) async {
     emit(GetBooksLoading());
+    authors = [];
+    classifications = [];
     await DBHelper.getData(booksT).then((dataList) {
-      books = dataList.map((e) => Book.fromMap(e)).toList();
-      books.sort((a, b) => b.date!.compareTo(a.date!));
-      for (var element in books) {
+      _books = dataList.map((e) => Book.fromMap(e)).toList();
+      _books.sort((a, b) => b.date!.compareTo(a.date!));
+      for (var element in _books) {
         if (!authors.contains(element.author!)) {
           authors.add(element.author!);
         }
-        if (element.classification != null &&
-            !classifications.contains(element.classification!)) {
-          classifications.add(element.classification!);
+        if (element.classification != '' &&
+            element.classification != null &&
+            !classifications.contains(element.classification!.split(' ')[0])) {
+          classifications.addAll(element.classification!.split(' '));
         }
       }
     });
-    if (books.isNotEmpty) {
+    if (_books.isNotEmpty) {
       emit(GetBooksSuccess());
     }
   }
 
   Future<File> saveBooksToFile() {
-    return storage.writeBooks(books);
+    return storage.writeBooks(_books);
   }
 
   Future readBooks() async {
     List<Book> importedBooks = await storage.readBooks();
-    books = importedBooks;
-    for (var element in books) {
+    _books = importedBooks;
+    DBHelper.deleteDatabase();
+    for (var element in _books) {
       DBHelper.insert(booksT, element);
     }
+    add(GetBooksFromDB());
   }
 
-  void readBooksFromFilePicker() async {
+  Future readBooksFromFilePicker() async {
     var importedBooks = await storage.readFromFilePicker();
-
-    books = importedBooks;
+    _books = importedBooks;
+    DBHelper.deleteDatabase();
+    for (var element in _books) {
+      DBHelper.insert(booksT, element);
+    }
+    add(GetBooksFromDB());
   }
 }

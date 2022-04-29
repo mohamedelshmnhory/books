@@ -13,3 +13,20 @@ void doneAlert(BuildContext context) {
         );
       });
 }
+
+void alert(BuildContext context) {
+  showDialog(
+      context: context,
+      builder: (_) {
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Text(
+              'The name of the book is already in use !!',
+              style: Theme.of(context).textTheme.headline2,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      });
+}
