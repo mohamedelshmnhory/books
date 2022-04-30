@@ -183,7 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         });
                         Navigator.pop(context);
                       },
-                      child: const Text('All'),
+                      child: Text('All (${appBloc.books.length})'),
                       style: ButtonStyle(
                           backgroundColor: MaterialStateProperty.all(
                               appBloc.filter == 'All'
@@ -191,47 +191,51 @@ class _MyHomePageState extends State<MyHomePage> {
                                   : mainColor.withOpacity(.3))),
                     ),
                     ExpansionTile(
-                      title: const Text('Authors'),
+                      title: Text('Authors (${appBloc.authors.length})'),
                       children: [
-                        ...List.generate(
-                            appBloc.authors.length,
-                            (index) => ElevatedButton(
-                                  onPressed: () {
-                                    appBloc.add(FilterByAuthor(
-                                        appBloc.authors[index]));
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text(appBloc.authors[index]),
-                                  style: ButtonStyle(
-                                      backgroundColor:
-                                          MaterialStateProperty.all(
-                                              appBloc.filter ==
-                                                      appBloc.authors[index]
-                                                  ? mainColor
-                                                  : mainColor.withOpacity(.5))),
-                                ))
+                        ...List.generate(appBloc.authors.length, (index) {
+                          final String author =
+                              appBloc.authors.keys.toList()[index];
+                          return ElevatedButton(
+                            onPressed: () {
+                              appBloc.add(FilterByAuthor(author));
+                              Navigator.pop(context);
+                            },
+                            child: Text(author +
+                                ' (${appBloc.authors.values.toList()[index]})'),
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(
+                                    appBloc.filter == author
+                                        ? mainColor
+                                        : mainColor.withOpacity(.5))),
+                          );
+                        })
                       ],
                     ),
                     ExpansionTile(
-                      title: const Text('Classifications'),
+                      title: Text(
+                          'Classifications (${appBloc.classifications.length})'),
                       children: [
-                        ...List.generate(
-                            appBloc.classifications.length,
-                            (index) => ElevatedButton(
-                                  onPressed: () {
-                                    appBloc.add(FilterByClassification(
-                                        appBloc.classifications[index]));
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text(appBloc.classifications[index]),
-                                  style: ButtonStyle(
-                                      backgroundColor:
-                                          MaterialStateProperty.all(appBloc
-                                                      .filter ==
-                                                  appBloc.classifications[index]
-                                              ? mainColor
-                                              : mainColor.withOpacity(.5))),
-                                ))
+                        ...List.generate(appBloc.classifications.length,
+                            (index) {
+                          final String classification =
+                              appBloc.classifications.keys.toList()[index];
+
+                          return ElevatedButton(
+                            onPressed: () {
+                              appBloc
+                                  .add(FilterByClassification(classification));
+                              Navigator.pop(context);
+                            },
+                            child: Text(classification +
+                                ' (${appBloc.classifications.values.toList()[index]})'),
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(
+                                    appBloc.filter == classification
+                                        ? mainColor
+                                        : mainColor.withOpacity(.5))),
+                          );
+                        })
                       ],
                     ),
                   ],

@@ -30,8 +30,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final Storage storage;
   List<Book> _books = [];
   List<Book> searchBooks = [];
-  List<String> authors = [];
-  List<String> classifications = [];
+  final Map authors = {};
+  final Map classifications = {};
   String filter = 'All';
   Icon customIcon = const Icon(Icons.search);
   Widget customSearchBar = const Text(appName);
@@ -72,25 +72,28 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
   Future<void> _getBooksFromDB(Emitter<AppState> emit) async {
     emit(GetBooksLoading());
-    authors = [];
-    classifications = [];
+    authors.clear();
+    classifications.clear();
     await DBHelper.getData(booksT).then((dataList) {
       _books = dataList.map((e) => Book.fromMap(e)).toList();
       _books.sort((a, b) => b.date!.compareTo(a.date!));
+      final List<String> temp = [];
       for (var element in _books) {
-        if (!authors.contains(element.author!)) {
-          authors.add(element.author!);
-        }
-        if (element.classification != '' &&
-            element.classification != null &&
-            !classifications.contains(element.classification!.split(' ')[0])) {
-          classifications.addAll(element.classification!.split(' '));
+        authors.containsKey(element.author)
+            ? authors[element.author]++
+            : authors[element.author] = 1;
+        if (element.classification != '' && element.classification != null) {
+          temp.addAll(element.classification!.split(' '));
         }
       }
+      for (var element in temp) {
+        classifications.containsKey(element)
+            ? classifications[element]++
+            : classifications[element] = 1;
+      }
     });
-    if (_books.isNotEmpty) {
-      emit(GetBooksSuccess());
-    }
+
+    emit(GetBooksSuccess());
   }
 
   Future<File> saveBooksToFile() {

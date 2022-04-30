@@ -104,7 +104,7 @@ class _AddBookFormState extends State<AddBookForm> {
                   itemCount: widget.appBloc.authors.length,
                   physics: const BouncingScrollPhysics(),
                   itemBuilder: (BuildContext context, int index) {
-                    String author = widget.appBloc.authors[index];
+                    String author = widget.appBloc.authors.keys.toList()[index];
                     return GestureDetector(
                       onTap: () {
                         authorController.text = author;
@@ -155,12 +155,13 @@ class _AddBookFormState extends State<AddBookForm> {
                   physics: const BouncingScrollPhysics(),
                   itemBuilder: (BuildContext context, int index) {
                     String classification =
-                        widget.appBloc.classifications[index];
+                        widget.appBloc.classifications.keys.toList()[index];
                     return GestureDetector(
                       onTap: () {
                         if (!classificationController.text
                             .contains(classification)) {
-                          classificationController.text += ' ' + classification.trim();
+                          classificationController.text +=
+                              ' ' + classification.trim();
                         }
                       },
                       child: Container(
