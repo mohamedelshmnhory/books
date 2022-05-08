@@ -22,5 +22,5 @@ class SizeConfig {
   static double getR(double radius) => radius.r;
 }
 
-sizedBoxH(double h) => SizedBox(height: SizeConfig.getH(h));
-sizedBoxW(double w) => SizedBox(width: SizeConfig.getW(w));
+SizedBox sizedBoxH(double h) => SizedBox(height: SizeConfig.getH(h));
+SizedBox sizedBoxW(double w) => SizedBox(width: SizeConfig.getW(w));

@@ -1,5 +1,4 @@
 import 'package:books/bloc/app_bloc/app_bloc.dart';
-import 'package:books/dependencies/dependency_init.dart';
 import 'package:books/styles/size_config.dart';
 import 'package:books/widgets/app_button.dart';
 import 'package:books/widgets/dialogs.dart';
@@ -96,41 +95,61 @@ class _AddBookFormState extends State<AddBookForm> {
                 label: 'Author',
                 prefix: null,
               ),
-              SizedBox(
-                height:
-                    widget.appBloc.authors.isEmpty ? 0 : SizeConfig.getH(50),
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: widget.appBloc.authors.length,
-                  physics: const BouncingScrollPhysics(),
-                  itemBuilder: (BuildContext context, int index) {
-                    String author = widget.appBloc.authors.keys.toList()[index];
-                    return GestureDetector(
-                      onTap: () {
-                        authorController.text = author;
-                      },
-                      child: Container(
-                        margin:
-                            EdgeInsets.symmetric(vertical: SizeConfig.getH(10)),
-                        padding: EdgeInsets.symmetric(
-                            horizontal: SizeConfig.getW(20),
-                            vertical: SizeConfig.getH(5)),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: mainColor),
-                          borderRadius: BorderRadius.circular(15),
-                          color: white,
-                        ),
-                        child: Text(
-                          author,
-                          style: Theme.of(context).textTheme.headline3,
-                        ),
-                      ),
-                    );
+              DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  hint: Text('Authors',
+                      style: Theme.of(context).textTheme.bodyText1),
+                  items: List.generate(
+                      widget.appBloc.authors.length,
+                      (index) => DropdownMenuItem<String>(
+                            value: widget.appBloc.authors.keys.toList()[index],
+                            child: Text(
+                                widget.appBloc.authors.keys.toList()[index]),
+                          )),
+                  onChanged: (value) {
+                    statusChanged = true;
+                    setState(() {
+                      authorController.text = value!;
+                    });
                   },
-                  separatorBuilder: (BuildContext context, int index) =>
-                      sizedBoxW(5),
                 ),
               ),
+              // SizedBox(
+              //   height:
+              //       widget.appBloc.authors.isEmpty ? 0 : SizeConfig.getH(50),
+              //   child: ListView.separated(
+              //     scrollDirection: Axis.horizontal,
+              //     itemCount: widget.appBloc.authors.length,
+              //     physics: const BouncingScrollPhysics(),
+              //     itemBuilder: (BuildContext context, int index) {
+              //       String author = widget.appBloc.authors.keys.toList()[index];
+              //       return GestureDetector(
+              //         onTap: () {
+              //           authorController.text = author;
+              //         },
+              //         child: Container(
+              //           margin:
+              //               EdgeInsets.symmetric(vertical: SizeConfig.getH(10)),
+              //           padding: EdgeInsets.symmetric(
+              //               horizontal: SizeConfig.getW(20),
+              //               vertical: SizeConfig.getH(5)),
+              //           decoration: BoxDecoration(
+              //             border: Border.all(color: mainColor),
+              //             borderRadius: BorderRadius.circular(15),
+              //             color: white,
+              //           ),
+              //           child: Text(
+              //             author,
+              //             style: Theme.of(context).textTheme.headline3,
+              //           ),
+              //         ),
+              //       );
+              //     },
+              //     separatorBuilder: (BuildContext context, int index) =>
+              //         sizedBoxW(5),
+              //   ),
+              // ),
 
               defaultFormField(
                 controller: classificationController,
