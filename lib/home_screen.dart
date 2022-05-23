@@ -32,50 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: appBloc.customIcon.icon == Icons.search
-            ? gestureTitle
-            : appBloc.customSearchBar,
-        actions: [
-          IconButton(
-              onPressed: () {
-                setState(() {
-                  if (appBloc.customIcon.icon == Icons.search) {
-                    appBloc.customIcon = const Icon(Icons.cancel);
-                    appBloc.filter = 'All';
-                    appBloc.customSearchBar = ListTile(
-                      leading: const Icon(Icons.search, color: white),
-                      title: TextField(
-                        onChanged: (value) {
-                          appBloc.searchBooks = appBloc.books
-                              .where((book) => buildContains(book, value))
-                              .toList();
-                          setState(() {});
-                        },
-                        decoration: const InputDecoration(
-                          hintText: 'book name, author, classification...',
-                          hintStyle: TextStyle(
-                            color: Colors.white,
-                            fontStyle: FontStyle.italic,
-                            fontSize: 14,
-                          ),
-                          border: InputBorder.none,
-                        ),
-                        style: const TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  } else {
-                    appBloc.searchBooks.clear();
-                    appBloc.customIcon = const Icon(Icons.search);
-                    appBloc.customSearchBar = const Text(appName);
-                  }
-                });
-              },
-              icon: appBloc.customIcon)
-        ],
-      ),
+      appBar: buildAppBar,
       body: GestureDetector(
         onHorizontalDragEnd: (DragEndDetails details) {
           if (details.primaryVelocity! > 0) {
@@ -115,31 +72,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                   selectedStatus = index;
                                 });
                               },
-                              child: Container(
-                                margin: EdgeInsetsDirectional.only(
-                                    end: SizeConfig.getW(5)),
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: SizeConfig.getW(20),
-                                    vertical: SizeConfig.getH(5)),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: mainColor),
-                                  borderRadius: BorderRadius.circular(15),
-                                  color: selectedStatus == index
-                                      ? mainColor
-                                      : white,
-                                ),
-                                child: Text(
-                                  statusList[index].title ?? '',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headline4!
-                                      .copyWith(
-                                        color: selectedStatus == index
-                                            ? white
-                                            : mainColor,
-                                      ),
-                                ),
-                              ),
+                              child: StatusNavButton(
+                                  selectedStatus: selectedStatus, index: index),
                             ),
                           )
                         ],
@@ -186,7 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: Text('All (${appBloc.books.length})'),
                       style: ButtonStyle(
                           backgroundColor: MaterialStateProperty.all(
-                              appBloc.filter == 'All'
+                              appBloc.filter == all
                                   ? mainColor
                                   : mainColor.withOpacity(.3))),
                     ),
@@ -265,6 +199,57 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  AppBar get buildAppBar {
+    return AppBar(
+      title: appBloc.customIcon.icon == Icons.search
+          ? gestureTitle
+          : appBloc.customSearchBar,
+      actions: [
+        IconButton(
+            onPressed: () {
+              setState(() {
+                if (appBloc.customIcon.icon == Icons.search) {
+                  appBloc.customIcon = const Icon(Icons.cancel);
+                  appBloc.filter = all;
+                  appBloc.customSearchBar = ListTile(
+                    leading: const Icon(Icons.search, color: white),
+                    title: TextField(
+                      onChanged: (value) {
+                        appBloc.searchBooks = appBloc.books
+                            .where((book) => buildContains(book, value))
+                            .toList();
+                        setState(() {});
+                      },
+                      decoration: buildInputDecoration,
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  );
+                } else {
+                  appBloc.searchBooks.clear();
+                  appBloc.customIcon = const Icon(Icons.search);
+                  appBloc.customSearchBar = const Text(appName);
+                }
+              });
+            },
+            icon: appBloc.customIcon)
+      ],
+    );
+  }
+
+  InputDecoration get buildInputDecoration {
+    return const InputDecoration(
+      hintText: 'book name, author, classification...',
+      hintStyle: TextStyle(
+        color: Colors.white,
+        fontStyle: FontStyle.italic,
+        fontSize: 14,
+      ),
+      border: InputBorder.none,
+    );
+  }
+
   Widget get gestureTitle {
     return GestureDetector(
       onTap: () {
@@ -284,5 +269,36 @@ class _MyHomePageState extends State<MyHomePage> {
     return book.name!.toLowerCase().contains(value.toLowerCase()) ||
         book.author!.toLowerCase().contains(value.toLowerCase()) ||
         (book.classification ?? '').toLowerCase().contains(value.toLowerCase());
+  }
+}
+
+class StatusNavButton extends StatelessWidget {
+  const StatusNavButton({
+    Key? key,
+    required this.selectedStatus,
+    required this.index,
+  }) : super(key: key);
+
+  final int selectedStatus;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsetsDirectional.only(end: SizeConfig.getW(5)),
+      padding: EdgeInsets.symmetric(
+          horizontal: SizeConfig.getW(20), vertical: SizeConfig.getH(5)),
+      decoration: BoxDecoration(
+        border: Border.all(color: mainColor),
+        borderRadius: BorderRadius.circular(15),
+        color: selectedStatus == index ? mainColor : white,
+      ),
+      child: Text(
+        statusList[index].title ?? '',
+        style: Theme.of(context).textTheme.headline4!.copyWith(
+              color: selectedStatus == index ? white : mainColor,
+            ),
+      ),
+    );
   }
 }

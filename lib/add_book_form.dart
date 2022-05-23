@@ -5,6 +5,7 @@ import 'package:books/widgets/dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
+import 'dependencies/dependency_init.dart';
 import 'local_storage.dart';
 import 'models/book_model.dart';
 import 'models/status_model.dart';
@@ -24,7 +25,7 @@ class AddBookForm extends StatefulWidget {
 
 class _AddBookFormState extends State<AddBookForm> {
   final formKey = GlobalKey<FormState>();
-
+  final DBHelper dbHelper = getIt<DBHelper>();
   final nameController = TextEditingController();
   final authorController = TextEditingController();
   final statusController = TextEditingController();
@@ -108,48 +109,10 @@ class _AddBookFormState extends State<AddBookForm> {
                                 widget.appBloc.authors.keys.toList()[index]),
                           )),
                   onChanged: (value) {
-                    statusChanged = true;
-                    setState(() {
-                      authorController.text = value!;
-                    });
+                    authorController.text = value!;
                   },
                 ),
               ),
-              // SizedBox(
-              //   height:
-              //       widget.appBloc.authors.isEmpty ? 0 : SizeConfig.getH(50),
-              //   child: ListView.separated(
-              //     scrollDirection: Axis.horizontal,
-              //     itemCount: widget.appBloc.authors.length,
-              //     physics: const BouncingScrollPhysics(),
-              //     itemBuilder: (BuildContext context, int index) {
-              //       String author = widget.appBloc.authors.keys.toList()[index];
-              //       return GestureDetector(
-              //         onTap: () {
-              //           authorController.text = author;
-              //         },
-              //         child: Container(
-              //           margin:
-              //               EdgeInsets.symmetric(vertical: SizeConfig.getH(10)),
-              //           padding: EdgeInsets.symmetric(
-              //               horizontal: SizeConfig.getW(20),
-              //               vertical: SizeConfig.getH(5)),
-              //           decoration: BoxDecoration(
-              //             border: Border.all(color: mainColor),
-              //             borderRadius: BorderRadius.circular(15),
-              //             color: white,
-              //           ),
-              //           child: Text(
-              //             author,
-              //             style: Theme.of(context).textTheme.headline3,
-              //           ),
-              //         ),
-              //       );
-              //     },
-              //     separatorBuilder: (BuildContext context, int index) =>
-              //         sizedBoxW(5),
-              //   ),
-              // ),
 
               defaultFormField(
                 controller: classificationController,
@@ -164,43 +127,24 @@ class _AddBookFormState extends State<AddBookForm> {
                 prefix: null,
               ),
               sizedBoxH(10),
-              SizedBox(
-                height: widget.appBloc.classifications.isEmpty
-                    ? 0
-                    : SizeConfig.getH(30),
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: widget.appBloc.classifications.length,
-                  physics: const BouncingScrollPhysics(),
-                  itemBuilder: (BuildContext context, int index) {
-                    String classification =
-                        widget.appBloc.classifications.keys.toList()[index];
-                    return GestureDetector(
-                      onTap: () {
-                        if (!classificationController.text
-                            .contains(classification)) {
-                          classificationController.text +=
-                              ' ' + classification.trim();
-                        }
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: SizeConfig.getW(20),
-                            vertical: SizeConfig.getH(5)),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: mainColor),
-                          borderRadius: BorderRadius.circular(15),
-                          color: white,
-                        ),
-                        child: Text(
-                          classification,
-                          style: Theme.of(context).textTheme.headline3,
-                        ),
-                      ),
-                    );
+              DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  hint: Text('Classifications',
+                      style: Theme.of(context).textTheme.bodyText1),
+                  items: List.generate(
+                      widget.appBloc.classifications.length,
+                      (index) => DropdownMenuItem<String>(
+                            value: widget.appBloc.classifications.keys
+                                .toList()[index],
+                            child: Text(widget.appBloc.classifications.keys
+                                .toList()[index]),
+                          )),
+                  onChanged: (value) {
+                    if (!classificationController.text.contains(value!)) {
+                      classificationController.text += ' ' + value.trim();
+                    }
                   },
-                  separatorBuilder: (BuildContext context, int index) =>
-                      sizedBoxW(5),
                 ),
               ),
               sizedBoxH(10),
@@ -285,7 +229,7 @@ class _AddBookFormState extends State<AddBookForm> {
                         date: DateTime.now().toString(),
                       );
                       increaseReadsNumder(bk);
-                      DBHelper.insert(booksT, bk).then((int id) {
+                      dbHelper.insert(booksT, bk).then((int id) {
                         Navigator.pop(context);
                         // bk.id = id;
                         // showRateDialog(context, bk);
@@ -299,7 +243,7 @@ class _AddBookFormState extends State<AddBookForm> {
                       widget.book?.status = statusId;
                       widget.book?.date = DateTime.now().toString();
                       increaseReadsNumder(widget.book!);
-                      DBHelper.update(booksT, widget.book!).whenComplete(() {
+                      dbHelper.update(booksT, widget.book!).whenComplete(() {
                         Navigator.pop(context);
                         // showRateDialog(context, widget.book!);
                       });

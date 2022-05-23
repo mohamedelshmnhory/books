@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
@@ -13,9 +14,11 @@ import '../../utils/backup/storage.dart';
 part 'app_event.dart';
 part 'app_state.dart';
 
+const String all = 'All';
+
 @Injectable()
 class AppBloc extends Bloc<AppEvent, AppState> {
-  AppBloc(this.storage) : super(AppInitial()) {
+  AppBloc(this.storage, this.dbHelper) : super(AppInitial()) {
     on<AppEvent>((event, emit) async {
       if (event is GetBooksFromDB) {
         await _getBooksFromDB(emit);
@@ -28,11 +31,13 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   }
 
   final Storage storage;
+  final DBHelper dbHelper;
+
   List<Book> _books = [];
   List<Book> searchBooks = [];
-  final Map authors = {};
-  final Map classifications = {};
-  String filter = 'All';
+  Map authors = {};
+  Map classifications = {};
+  String filter = all;
   Icon customIcon = const Icon(Icons.search);
   Widget customSearchBar = const Text(appName);
 
@@ -42,10 +47,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(GetBooksLoading());
     filter = event.author;
     searchBooks = _books.where((book) {
-      if (book.author == null) {
-        return false;
-      }
-      return book.author!.contains(event.author);
+      return book.author?.contains(event.author) ?? false;
     }).toList();
     emit(GetBooksSuccess());
   }
@@ -55,57 +57,68 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(GetBooksLoading());
     filter = event.classification;
     searchBooks = _books.where((book) {
-      if (book.classification == null) {
-        return false;
-      }
-      return book.classification!.contains(event.classification);
+      return book.classification?.contains(event.classification) ?? false;
     }).toList();
     emit(GetBooksSuccess());
   }
 
   void cleatSearch() {
     searchBooks.clear();
-    filter = 'All';
+    filter = all;
     customIcon = const Icon(Icons.search);
     customSearchBar = const Text(appName);
   }
 
   Future<void> _getBooksFromDB(Emitter<AppState> emit) async {
     emit(GetBooksLoading());
-    authors.clear();
-    classifications.clear();
-    await DBHelper.getData(booksT).then((dataList) {
+
+    await dbHelper.getData(booksT).then((dataList) {
       _books = dataList.map((e) => Book.fromMap(e)).toList();
       _books.sort((a, b) => b.date!.compareTo(a.date!));
-      final List<String> temp = [];
-      for (var element in _books) {
-        authors.containsKey(element.author)
-            ? authors[element.author]++
-            : authors[element.author] = 1;
-        if (element.classification != '' && element.classification != null) {
-          temp.addAll(element.classification!.split(' '));
-        }
-      }
-      for (var element in temp) {
-        classifications.containsKey(element)
-            ? classifications[element]++
-            : classifications[element] = 1;
-      }
+
+      setAuthorsAndClassifications();
     });
 
     emit(GetBooksSuccess());
   }
 
-  Future<File> saveBooksToFile() {
+  void setAuthorsAndClassifications() {
+    final List<String> temp = [];
+    authors.clear();
+    classifications.clear();
+
+    for (var element in _books) {
+      authors.containsKey(element.author)
+          ? authors[element.author]++
+          : authors[element.author] = 1;
+
+      if (element.classification != '' && element.classification != null) {
+        temp.addAll(element.classification!.split(' '));
+      }
+    }
+
+    for (var element in temp) {
+      classifications.containsKey(element)
+          ? classifications[element]++
+          : classifications[element] = 1;
+    }
+
+    authors =
+        SplayTreeMap<String, dynamic>.from(authors, (a, b) => a.compareTo(b));
+    classifications = SplayTreeMap<String, dynamic>.from(
+        classifications, (a, b) => a.compareTo(b));
+  }
+
+  Future<File?> saveBooksToFile() {
     return storage.writeBooks(_books);
   }
 
   Future readBooks() async {
     List<Book> importedBooks = await storage.readBooks();
     _books = importedBooks;
-    DBHelper.deleteDatabase();
+    dbHelper.deleteDatabase();
     for (var element in _books) {
-      DBHelper.insert(booksT, element);
+      dbHelper.insert(booksT, element);
     }
     add(GetBooksFromDB());
   }
@@ -113,9 +126,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   Future readBooksFromFilePicker() async {
     var importedBooks = await storage.readFromFilePicker();
     _books = importedBooks;
-    DBHelper.deleteDatabase();
+    dbHelper.deleteDatabase();
     for (var element in _books) {
-      DBHelper.insert(booksT, element);
+      dbHelper.insert(booksT, element);
     }
     add(GetBooksFromDB());
   }

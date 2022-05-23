@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:share/share.dart';
 import 'package:file_picker/file_picker.dart';
 
+import '../../dependencies/dependency_init.dart';
 import '../../local_storage.dart';
 import '../../models/book_model.dart';
 import '../csv.dart';
@@ -32,7 +33,7 @@ class Storage {
     return File('$path/books data.csv');
   }
 
-  Future<File> writeBooks(List<Book> books) async {
+  Future<File?> writeBooks(List<Book> books) async {
     // 3
     if (!await Permission.storage.request().isGranted) {
       // 4
@@ -50,7 +51,7 @@ class Storage {
     return file.writeAsString(encodedPeople); // 7
   }
 
-  Future<File> writeToCSV(String text) async {
+  Future<File?> writeToCSV(String text) async {
     // 3
     if (!await Permission.storage.request().isGranted) {
       // 4
@@ -93,7 +94,7 @@ class Storage {
   }
 
   void shareCSV() async {
-    var csv = mapListToCsv(await DBHelper.getData(booksT),
+    var csv = mapListToCsv(await getIt<DBHelper>().getData(booksT),
         converter: const ListToCsvConverter());
     writeToCSV(csv!);
     File file = await _localCSVFile; // 1

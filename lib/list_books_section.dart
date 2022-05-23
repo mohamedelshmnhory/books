@@ -1,11 +1,11 @@
 import 'package:books/bloc/app_bloc/app_bloc.dart';
-import 'package:books/dependencies/dependency_init.dart';
 import 'package:books/styles/colors.dart';
 import 'package:books/styles/size_config.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'add_book_form.dart';
+import 'dependencies/dependency_init.dart';
 import 'local_storage.dart';
 import 'models/book_model.dart';
 
@@ -73,7 +73,7 @@ class _ListBooksSectionState extends State<ListBooksSection> {
                               actions: [
                                 IconButton(
                                     onPressed: () {
-                                      DBHelper.delete(
+                                      getIt<DBHelper>().delete(
                                               booksT, widget.books[index].id!)
                                           .then((value) {
                                         widget.appBloc.add(GetBooksFromDB());

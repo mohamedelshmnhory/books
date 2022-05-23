@@ -1,3 +1,4 @@
+import 'package:books/dependencies/dependency_init.dart';
 import 'package:books/styles/size_config.dart';
 import 'package:books/widgets/app_button.dart';
 import 'package:flutter/material.dart';
@@ -83,7 +84,9 @@ class _AddRateFromState extends State<AddRateFrom> {
                   if (formKey.currentState!.validate()) {
                     widget.book?.classification = classificationController.text;
                     widget.book?.rate = rate;
-                    DBHelper.update(booksT, widget.book!).whenComplete(() {
+                    getIt<DBHelper>()
+                        .update(booksT, widget.book!)
+                        .whenComplete(() {
                       Navigator.pop(context);
                     });
                   }

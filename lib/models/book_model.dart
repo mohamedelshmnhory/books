@@ -1,5 +1,7 @@
 
-class Book {
+import 'package:equatable/equatable.dart';
+
+class Book extends Equatable{
   int? id;
   String? name;
   String? author;
@@ -46,4 +48,7 @@ class Book {
     }
     return map;
   }
+
+  @override
+  List<Object?> get props => [id];
 }
